@@ -7,7 +7,7 @@ from typing import Optional
 from fastapi import HTTPException, Depends, status
 from fastapi.security import HTTPBearer, HTTPAuthorizationCredentials
 
-from .database import get_db, get_password_hash, verify_password
+from database import get_db, get_password_hash, verify_password
 
 # JWT 配置
 SECRET_KEY = "library-management-secret-key-2024"

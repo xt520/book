@@ -3,9 +3,9 @@
 """
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
-from ..database import get_db, get_password_hash
-from ..models import UserCreate, UserInfo, MessageResponse
-from ..auth import require_admin
+from database import get_db, get_password_hash
+from models import UserCreate, UserInfo, MessageResponse
+from auth import require_admin
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 

@@ -383,6 +383,59 @@
           </div>
         </div>
       </main>
+
+        <!-- Batch Operations -->
+        <div v-if="activeMenu === 'batch'" class="panel">
+          <div class="panel-header">
+            <h2 class="headline-small">批量操作</h2>
+          </div>
+          
+          <div class="batch-section">
+            <h3 class="title-medium">图书批量操作</h3>
+            <div class="batch-actions">
+               <button class="md-outlined-button" @click="handleExportBooks">
+                 📤 导出图书 (Excel)
+               </button>
+               
+               <div class="import-box">
+                 <input 
+                   type="file" 
+                   accept=".xlsx, .xls"
+                   ref="bookImportInput"
+                   style="display: none"
+                   @change="handleImportBooks"
+                 />
+                 <button class="md-filled-button" @click="$refs.bookImportInput.click()">
+                   📥 导入图书 (Excel)
+                 </button>
+                 <p class="body-small hint-text">需包含列：title, author, isbn, category</p>
+               </div>
+            </div>
+            
+            <div class="divider"></div>
+            
+            <h3 class="title-medium">用户批量操作</h3>
+            <div class="batch-actions">
+               <button class="md-outlined-button" @click="handleExportUsers">
+                 📤 导出用户 (Excel)
+               </button>
+               
+               <div class="import-box">
+                 <input 
+                   type="file" 
+                   accept=".xlsx, .xls"
+                   ref="userImportInput"
+                   style="display: none"
+                   @change="handleImportUsers"
+                 />
+                 <button class="md-filled-button" @click="$refs.userImportInput.click()">
+                   📥 导入用户 (Excel)
+                 </button>
+                 <p class="body-small hint-text">需包含列：student_id, name</p>
+               </div>
+            </div>
+          </div>
+        </div>
     </div>
 
     <!-- Add/Edit Book Dialog -->
@@ -502,7 +555,7 @@
 import { ref, computed, onMounted, watch, onUnmounted } from 'vue'
 import { useRouter } from 'vue-router'
 import { Html5Qrcode } from 'html5-qrcode'
-import { bookApi, borrowApi, userApi } from '../api'
+import { bookApi, borrowApi, userApi, batchApi } from '../api'
 
 const router = useRouter()
 const user = ref(null)
@@ -516,6 +569,7 @@ const menuItems = [
   { id: 'users', icon: '👥', label: '学号录入' },
   { id: 'records', icon: '📋', label: '借阅记录' },
   { id: 'scanReturn', icon: '📷', label: '扫码还书' },
+  { id: 'batch', icon: '⚡', label: '批量操作' },
   { id: 'overdue', icon: '⚠️', label: '逾期管理' }
 ]
 
@@ -1031,6 +1085,63 @@ watch(activeMenu, (newVal) => {
 onUnmounted(() => {
   stopCameraScan()
 })
+
+const bookImportInput = ref(null)
+const userImportInput = ref(null)
+
+const handleExportBooks = async () => {
+  try {
+    const blob = await batchApi.exportBooks()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `books_export_${new Date().toISOString().slice(0,10)}.xlsx`
+    link.click()
+  } catch (e) {
+    alert('导出失败')
+  }
+}
+
+const handleExportUsers = async () => {
+  try {
+    const blob = await batchApi.exportUsers()
+    const url = window.URL.createObjectURL(blob)
+    const link = document.createElement('a')
+    link.href = url
+    link.download = `users_export_${new Date().toISOString().slice(0,10)}.xlsx`
+    link.click()
+  } catch (e) {
+    alert('导出失败')
+  }
+}
+
+const handleImportBooks = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  try {
+    const res = await batchApi.importBooks(file)
+    alert(res.message)
+    loadBooks()
+  } catch (e) {
+    alert(e.detail || '导入失败')
+  }
+  e.target.value = ''
+}
+
+const handleImportUsers = async (e) => {
+  const file = e.target.files?.[0]
+  if (!file) return
+  try {
+    const res = await batchApi.importUsers(file)
+    alert(res.message)
+    loadUsers()
+  } catch (e) {
+    alert(e.detail || '导入失败')
+  }
+  e.target.value = ''
+}
+
+
 </script>
 
 <style scoped>
@@ -1681,5 +1792,39 @@ onUnmounted(() => {
 .role-chip.student {
   background-color: var(--md-secondary-container);
   color: var(--md-on-secondary-container);
+}
+
+.batch-section {
+  max-width: 600px;
+}
+
+.batch-section h3 {
+  margin-bottom: 16px;
+  color: var(--md-on-surface);
+}
+
+.batch-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  align-items: flex-start;
+  margin-bottom: 32px;
+}
+
+.import-box {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+
+.hint-text {
+  color: var(--md-on-surface-variant);
+  opacity: 0.8;
+}
+
+.divider {
+  height: 1px;
+  background: var(--md-outline-variant);
+  margin: 24px 0;
 }
 </style>

@@ -80,4 +80,35 @@ export const borrowApi = {
     getOverdue: () => api.get('/api/borrow/overdue')
 }
 
+// ==================== 社交功能 API ====================
+
+export const socialApi = {
+    createReview: (bookId, data) => api.post(`/api/books/${bookId}/reviews`, data),
+    getReviews: (bookId) => api.get(`/api/books/${bookId}/reviews`),
+    toggleFavorite: (bookId) => api.post(`/api/books/${bookId}/favorite`),
+    isFavorite: (bookId) => api.get(`/api/books/${bookId}/is-favorite`),
+    getMyFavorites: () => api.get('/api/users/favorites')
+}
+
+// ==================== 批量操作 API ====================
+
+export const batchApi = {
+    exportBooks: () => api.get('/api/batch/export/books', { responseType: 'blob' }),
+    exportUsers: () => api.get('/api/batch/export/users', { responseType: 'blob' }),
+    importBooks: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/api/batch/import/books', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+    },
+    importUsers: (file) => {
+        const formData = new FormData()
+        formData.append('file', file)
+        return api.post('/api/batch/import/users', formData, {
+            headers: { 'Content-Type': 'multipart/form-data' }
+        })
+    }
+}
+
 export default api

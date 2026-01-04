@@ -53,6 +53,12 @@
           >
             已归还
           </button>
+          <button 
+            :class="['tab-btn', { active: activeTab === 'favorites' }]"
+            @click="activeTab = 'favorites'"
+          >
+            我的收藏
+          </button>
         </div>
 
         <div class="record-list">
@@ -60,27 +66,41 @@
             v-for="record in filteredRecords" 
             :key="record.id" 
             class="record-item"
+            @click="record.book_id ? $router.push(`/book/${record.book_id}`) : null"
+            :style="{ cursor: record.book_id ? 'pointer' : 'default' }"
           >
             <div class="record-cover">
-              <img v-if="record.cover" :src="record.cover" />
+              <img v-if="record.cover || record.book_cover" :src="record.cover || record.book_cover" />
               <span v-else>📖</span>
             </div>
             <div class="record-info">
               <h4 class="title-medium">{{ record.book_title }}</h4>
               <p class="body-small author">{{ record.book_author }}</p>
-              <div class="dates">
+              <div class="dates" v-if="activeTab !== 'favorites'">
                 <span class="body-small">借阅：{{ formatDate(record.borrow_date) }}</span>
                 <span :class="['body-small', { overdue: isOverdue(record) }]">
                   {{ record.status === 'borrowed' ? '应还' : '归还' }}：
                   {{ formatDate(record.status === 'borrowed' ? record.due_date : record.return_date) }}
                 </span>
               </div>
+              <div class="dates" v-else>
+                 <span class="body-small">收藏于：{{ formatDate(record.created_at) }}</span>
+              </div>
             </div>
+            
+            <!-- Removed handleReturn button logic for favorites, only keep for borrowed if needed, 
+                 but original code didn't show return button in template, only handleReturn function existed -->
           </div>
           
           <div v-if="filteredRecords.length === 0" class="empty-records">
             <span class="empty-icon">📭</span>
-            <p class="body-medium">暂无{{ activeTab === 'borrowed' ? '借阅中' : '已归还' }}的图书</p>
+            <p class="body-medium">
+              {{ 
+                activeTab === 'borrowed' ? '暂无借阅中的图书' : 
+                activeTab === 'returned' ? '暂无已归还的图书' : 
+                '暂无收藏的图书' 
+              }}
+            </p>
           </div>
         </div>
       </div>
@@ -92,11 +112,12 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
-import { borrowApi } from '../api'
+import { borrowApi, socialApi } from '../api'
 
 const router = useRouter()
 const user = ref(null)
 const records = ref([])
+const favoriteRecords = ref([])
 const activeTab = ref('borrowed')
 
 const borrowedCount = computed(() => 
@@ -111,9 +132,10 @@ const overdueCount = computed(() =>
   records.value.filter(r => r.status === 'borrowed' && isOverdue(r)).length
 )
 
-const filteredRecords = computed(() => 
-  records.value.filter(r => r.status === activeTab.value)
-)
+const filteredRecords = computed(() => {
+  if (activeTab.value === 'favorites') return favoriteRecords.value
+  return records.value.filter(r => r.status === activeTab.value)
+})
 
 const isOverdue = (record) => {
   if (record.status !== 'borrowed') return false
@@ -151,12 +173,22 @@ const loadRecords = async () => {
   }
 }
 
+const loadFavorites = async () => {
+  try {
+    favoriteRecords.value = await socialApi.getMyFavorites()
+  } catch (e) {
+    console.error('加载收藏失败', e)
+  }
+}
+
 onMounted(() => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
     user.value = JSON.parse(userStr)
   }
+
   loadRecords()
+  loadFavorites()
 })
 </script>
 

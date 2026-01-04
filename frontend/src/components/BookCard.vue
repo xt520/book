@@ -1,5 +1,5 @@
 <template>
-  <div class="book-card md-card-elevated">
+  <div class="book-card md-card-elevated" @click="goToDetail">
     <div class="book-cover">
       <img v-if="book.cover" :src="book.cover" alt="封面" />
       <div v-else class="cover-placeholder">
@@ -21,7 +21,7 @@
       <button 
         class="borrow-btn md-filled-button"
         :disabled="book.available_count === 0"
-        @click="$emit('borrow', book)"
+        @click.stop="$emit('borrow', book)"
       >
         {{ book.available_count > 0 ? '借阅' : '暂无库存' }}
       </button>
@@ -30,8 +30,15 @@
 </template>
 
 <script setup>
-defineProps(['book'])
+import { useRouter } from 'vue-router'
+
+const props = defineProps(['book'])
 defineEmits(['borrow'])
+
+const router = useRouter()
+const goToDetail = () => {
+  router.push(`/book/${props.book.id}`)
+}
 </script>
 
 <style scoped>

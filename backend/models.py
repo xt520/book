@@ -84,3 +84,26 @@ class BorrowRecordResponse(BaseModel):
 class MessageResponse(BaseModel):
     message: str
     success: bool = True
+
+# ==================== 社交功能模型 ====================
+
+class ReviewCreate(BaseModel):
+    rating: int
+    content: Optional[str] = None
+
+class ReviewResponse(BaseModel):
+    id: int
+    book_id: int
+    user_id: int
+    user_name: str
+    rating: int
+    content: Optional[str]
+    created_at: str
+
+class FavoriteResponse(BaseModel):
+    id: int
+    book_id: int
+    book_title: str
+    book_author: str
+    book_cover: Optional[str]
+    created_at: str

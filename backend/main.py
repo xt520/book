@@ -11,10 +11,10 @@ from fastapi.middleware.cors import CORSMiddleware
 import os
 
 # 导入后端模块
-from backend.database import get_db, get_password_hash, verify_password
-from backend.auth import create_access_token, authenticate_user, change_user_password, get_current_user
-from backend.models import LoginRequest, LoginResponse, ChangePasswordRequest, MessageResponse
-from backend.routers import books, borrow, users, social, batch
+from database import get_db, get_password_hash, verify_password
+from auth import create_access_token, authenticate_user, change_user_password, get_current_user
+from models import LoginRequest, LoginResponse, ChangePasswordRequest, MessageResponse
+from routers import books, borrow, users, social, batch
 
 
 # ==================== 生命周期管理 ====================
@@ -22,7 +22,7 @@ from backend.routers import books, borrow, users, social, batch
 @asynccontextmanager
 async def lifespan(app: FastAPI):
     """应用生命周期管理"""
-    from backend.covers_util import download_pending_covers
+    from covers_util import download_pending_covers
     
     # 启动时：在后台任务中下载待处理的封面
     asyncio.create_task(download_pending_covers())
@@ -42,8 +42,10 @@ app.add_middleware(
     allow_headers=["*"],
 )
 
-# 获取当前绝对路径
-base_path = os.path.dirname(os.path.abspath(__file__))
+# 获取当前绝对路径 (backend directory)
+backend_path = os.path.dirname(os.path.abspath(__file__))
+# Frontend is in ../frontend/dist
+base_path = os.path.dirname(backend_path)
 frontend_path = os.path.join(base_path, "frontend", "dist")
 
 # ==================== 认证 API ====================
@@ -67,7 +69,7 @@ async def login(request: LoginRequest):
 async def change_password(request: ChangePasswordRequest, current_user: dict = None):
     """修改密码"""
     from fastapi import Depends
-    from backend.auth import get_current_user
+    from auth import get_current_user
     
     # 这里需要手动获取 current_user，因为可能是首次登录的情况
     # 在实际调用时，前端会传递 token
@@ -79,7 +81,7 @@ async def change_password_with_token(
     token: str
 ):
     """使用 token 修改密码"""
-    from backend.auth import decode_token
+    from auth import decode_token
     
     payload = decode_token(token)
     user_id = payload.get("user_id")
@@ -106,7 +108,7 @@ app.include_router(batch.router)
 @app.get("/api/covers/{filename}")
 async def serve_cover(filename: str):
     """提供本地封面图片"""
-    from backend.covers_util import get_cover_path
+    from covers_util import get_cover_path
     
     filepath = get_cover_path(filename)
     if filepath.exists():

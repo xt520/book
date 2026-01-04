@@ -5,9 +5,9 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from datetime import datetime, timedelta
 
-from ..database import get_db
-from ..models import BorrowRequest, BorrowRecordResponse, MessageResponse
-from ..auth import get_current_user, require_admin
+from database import get_db
+from models import BorrowRequest, BorrowRecordResponse, MessageResponse
+from auth import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/borrow", tags=["borrow"])
 

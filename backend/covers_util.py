@@ -99,7 +99,7 @@ async def download_pending_covers():
     下载所有状态为1（待下载）的封面
     应在应用启动时调用
     """
-    from .database import get_db
+    from database import get_db
     
     print("检查待下载的封面...")
     

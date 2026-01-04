@@ -4,9 +4,9 @@
 from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import Optional, List
 
-from ..database import get_db
-from ..models import BookCreate, BookUpdate, BookResponse, MessageResponse
-from ..auth import get_current_user, require_admin
+from database import get_db
+from models import BookCreate, BookUpdate, BookResponse, MessageResponse
+from auth import get_current_user, require_admin
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
@@ -109,7 +109,7 @@ async def get_book(book_id: int, current_user: dict = Depends(get_current_user))
 @router.post("", response_model=MessageResponse)
 async def create_book(book: BookCreate, current_user: dict = Depends(require_admin)):
     """上架新图书（仅管理员）"""
-    from ..covers_util import download_cover
+    from covers_util import download_cover
     
     with get_db() as conn:
         cursor = conn.cursor()

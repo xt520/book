@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>企业级图书管理系统 | Material Design</title>
+    <!-- Material Design 资源 -->
+    <link href="https://fonts.googleapis.com/icon?family=Material+Icons" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/css/materialize.min.css">
+    <link rel="stylesheet" href="style.css">
+</head>
+<body class="grey lighten-4">
+    <!-- 导航栏 -->
+    <nav class="indigo darken-2">
+        <div class="nav-wrapper container">
+            <a href="#" class="brand-logo left" style="position: relative; margin-left: 10px;">图书云系统</a>
+            <ul id="nav-mobile" class="right">
+                <li class="hide-on-small-only"><a href="#!" id="export-btn" title="导出数据"><i class="material-icons">download</i></a></li>
+                <li class="hide-on-small-only"><a href="#!" id="import-trigger" title="导入数据"><i class="material-icons">upload</i></a></li>
+                <li><a href="#book-modal" class="modal-trigger btn waves-effect waves-light pink accent-3" style="margin-top: 14px; height: 36px; line-height: 36px; padding: 0 15px;"><i class="material-icons left">add</i>新增</a></li>
+            </ul>
+        </div>
+    </nav>
+
+    <div class="container main-content">
+        <!-- 仪表盘统计 -->
+        <div class="row" id="dashboard">
+            <div class="col s12 m3">
+                <div class="card-panel center white-text indigo">
+                    <i class="material-icons medium">collections_bookmark</i>
+                    <div class="stats-text">
+                        <h5 id="total-count">0</h5>
+                        <p>总馆藏量</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col s12 m3">
+                <div class="card-panel center white-text teal">
+                    <i class="material-icons medium">category</i>
+                    <div class="stats-text">
+                        <h5 id="category-count">0</h5>
+                        <p>覆盖类别</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col s12 m3">
+                <div class="card-panel center white-text deep-orange">
+                    <i class="material-icons medium">history_edu</i>
+                    <div class="stats-text">
+                        <h5 id="author-count">0</h5>
+                        <p>签约作者</p>
+                    </div>
+                </div>
+            </div>
+            <div class="col s12 m3">
+                <div class="card-panel center white-text purple">
+                    <i class="material-icons medium">assignment_turned_in</i>
+                    <div class="stats-text">
+                        <h5 id="borrowed-count">0</h5>
+                        <p>当前借出</p>
+                    </div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 统计与搜索栏 -->
+        <div class="row section-header">
+            <div class="col s12 m4">
+                <h4 class="grey-text text-darken-2">馆藏清单</h4>
+            </div>
+            <div class="col s12 m8 flex-header">
+                <div class="input-field inline-search">
+                    <i class="material-icons prefix">search</i>
+                    <input type="text" id="search-input" placeholder="搜索书名、作者或 ISBN...">
+                </div>
+                <div class="sort-field">
+                    <select id="sort-select">
+                        <option value="newest" selected>最新入库</option>
+                        <option value="title">书名 A-Z</option>
+                        <option value="category">类别排序</option>
+                    </select>
+                </div>
+            </div>
+        </div>
+
+        <!-- 分类快速过滤 -->
+        <div class="row" style="margin-bottom: 30px;">
+            <div class="col s12" id="category-filters">
+                <div class="chip active-chip cyan white-text clickable" data-filter="all">全部</div>
+                <!-- 动态生成其它分类 -->
+            </div>
+        </div>
+
+        <!-- 图书卡片容器 -->
+        <div class="row" id="book-container">
+            <!-- JavaScript 动态渲染内容 -->
+        </div>
+
+        <!-- 空状态提示 -->
+        <div id="empty-state" class="center-align hide">
+            <i class="material-icons large grey-text">inventory_2</i>
+            <h5 class="grey-text">暂无图书数据，请点击上方按钮添加</h5>
+        </div>
+    </div>
+
+    <!-- 添加/编辑图书的模态框 -->
+    <div id="book-modal" class="modal modal-fixed-footer">
+        <form id="book-form">
+            <div class="modal-content">
+                <h4 id="modal-title">添加新图书</h4>
+                <input type="hidden" id="edit-id">
+                <div class="row">
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">title</i>
+                        <input id="title" type="text" class="validate" required>
+                        <label for="title">书名</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <i class="material-icons prefix">person</i>
+                        <input id="author" type="text" class="validate" required>
+                        <label for="author">作者</label>
+                    </div>
+                    <div class="input-field col s12 m6">
+                        <i class="material-icons prefix">label</i>
+                        <input id="isbn" type="text" class="validate" required>
+                        <label for="isbn">ISBN</label>
+                        <div class="scanner-buttons">
+                            <a href="#!" id="scan-btn" class="btn-floating waves-effect waves-light indigo scanner-btn" title="摄像头扫码"><i class="material-icons">qr_code_scanner</i></a>
+                            <a href="#!" id="scan-image-btn" class="btn-floating waves-effect waves-light teal scanner-btn" title="图片扫码"><i class="material-icons">image</i></a>
+                            <input type="file" id="isbn-image-input" accept="image/*" style="display: none;">
+                        </div>
+                    </div>
+                    <div class="col s12">
+                        <div id="reader" style="display:none; width: 100%; border-radius: 8px; overflow: hidden; margin-top: 10px;"></div>
+                        <div id="image-preview" style="display:none; width: 100%; border-radius: 8px; overflow: hidden; margin-top: 10px; position: relative;">
+                            <img id="scan-preview-img" style="width: 100%; max-height: 300px; object-fit: contain;">
+                            <div id="scan-loading" class="center-align" style="position: absolute; top: 50%; left: 50%; transform: translate(-50%, -50%); display: none;">
+                                <div class="preloader-wrapper small active">
+                                    <div class="spinner-layer spinner-blue-only">
+                                        <div class="circle-clipper left"><div class="circle"></div></div>
+                                        <div class="gap-patch"><div class="circle"></div></div>
+                                        <div class="circle-clipper right"><div class="circle"></div></div>
+                                    </div>
+                                </div>
+                                <p class="indigo-text">正在识别条形码...</p>
+                            </div>
+                        </div>
+                    </div>
+                    <div class="input-field col s12">
+                        <i class="material-icons prefix">category</i>
+                        <select id="category">
+                            <option value="编程" selected>编程</option>
+                            <option value="文学">文学</option>
+                            <option value="科技">科技</option>
+                            <option value="艺术">艺术</option>
+                            <option value="其它">其它</option>
+                        </select>
+                        <label>图书类别</label>
+                    </div>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close waves-effect waves-grey btn-flat">取消</a>
+                <button type="submit" class="waves-effect waves-light btn indigo">保存</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 确认删除的模态框 -->
+    <div id="delete-modal" class="modal">
+        <div class="modal-content">
+            <h4>确认删除？</h4>
+            <p>此操作不可撤销，您确定要删除《<span id="delete-book-title"></span>》吗？</p>
+        </div>
+        <div class="modal-footer">
+            <a href="#!" class="modal-close waves-effect waves-grey btn-flat">放弃</a>
+            <a href="#!" id="confirm-delete-btn" class="modal-close waves-effect waves-red btn-flat red-text">确定删除</a>
+        </div>
+    </div>
+
+    <!-- 借阅模态框 -->
+    <div id="borrow-modal" class="modal">
+        <form id="borrow-form">
+            <div class="modal-content">
+                <h4>借阅图书</h4>
+                <input type="hidden" id="borrow-book-id">
+                <p>您正在借阅《<span id="borrow-book-title"></span>》</p>
+                <div class="input-field">
+                    <i class="material-icons prefix">person_outline</i>
+                    <input id="borrower-name" type="text" class="validate" required>
+                    <label for="borrower-name">借阅人姓名</label>
+                </div>
+            </div>
+            <div class="modal-footer">
+                <a href="#!" class="modal-close waves-effect waves-grey btn-flat">取消</a>
+                <button type="submit" class="waves-effect waves-light btn blue">确认借阅</button>
+            </div>
+        </form>
+    </div>
+
+    <!-- 脚本资源 -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/materialize/1.0.0/js/materialize.min.js"></script>
+    <script src="https://unpkg.com/html5-qrcode"></script>
+    <script src="script.js"></script>
+</body>
+</html>

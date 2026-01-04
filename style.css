@@ -1,0 +1,307 @@
+.main-content {
+    padding-top: 30px;
+}
+
+.section-header {
+    margin-bottom: 20px;
+    display: flex;
+    align-items: center;
+    flex-wrap: wrap;
+}
+
+.flex-header {
+    display: flex;
+    align-items: center;
+    justify-content: flex-end;
+    gap: 20px;
+}
+
+.inline-search {
+    flex-grow: 1;
+    margin: 0 !important;
+}
+
+.sort-field {
+    width: 150px;
+}
+
+.clickable {
+    cursor: pointer;
+}
+
+.active-chip {
+    background-color: #00838f !important;
+    font-weight: bold;
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+}
+
+.card-panel {
+    border-radius: 12px;
+    padding: 15px !important;
+}
+
+.card-panel h5 {
+    margin: 10px 0 5px 0;
+    font-weight: bold;
+}
+
+.card-panel p {
+    margin: 0;
+    opacity: 0.8;
+}
+
+.book-card {
+    transition: transform 0.2s, box-shadow 0.2s;
+    border-radius: 8px;
+    overflow: hidden;
+}
+
+.book-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 8px 15px rgba(0,0,0,0.2) !important;
+}
+
+.book-card .card-content {
+    padding: 20px;
+}
+
+.book-card .card-title {
+    font-size: 1.4rem !important;
+    font-weight: 500;
+    margin-bottom: 10px;
+    white-space: nowrap;
+    overflow: hidden;
+    text-overflow: ellipsis;
+}
+
+.book-info {
+    margin-top: 10px;
+}
+
+.book-info p {
+    display: flex;
+    align-items: center;
+    margin: 5px 0;
+    color: #666;
+}
+
+.book-info i {
+    font-size: 1.1rem;
+    margin-right: 8px;
+    color: #9e9e9e;
+}
+
+.category-chip {
+    position: absolute;
+    top: 15px;
+    right: 15px;
+    background: #e8eaf6;
+    color: #3f51b5;
+    padding: 2px 10px;
+    border-radius: 12px;
+    font-size: 0.8rem;
+    font-weight: bold;
+}
+
+.card-action {
+    background-color: #fafafa !important;
+    border-top: 1px solid #eee !important;
+    display: flex;
+    justify-content: flex-end;
+}
+
+.card-action a {
+    margin-right: 0 !important;
+    margin-left: 15px;
+}
+
+/* 调整搜索栏 */
+#search-input {
+    border-bottom: 1px solid #9e9e9e !important;
+}
+
+#search-input:focus {
+    border-bottom: 2px solid #3f51b5 !important;
+    box-shadow: none !important;
+}
+
+/* 响应式调整 - 终极修复版 */
+@media only screen and (max-width: 600px) {
+    nav {
+        height: 56px;
+        line-height: 56px;
+    }
+
+    nav .brand-logo {
+        font-size: 1.1rem !important;
+        left: 10px !important;
+        transform: none !important;
+        position: absolute !important;
+    }
+
+    #nav-mobile {
+        margin-right: 0 !important;
+    }
+
+    #nav-mobile li {
+        float: right;
+    }
+
+    .section-header h4 {
+        font-size: 1.3rem;
+        text-align: left;
+        margin: 15px 0 10px 0;
+        border-left: 4px solid #3f51b5;
+        padding-left: 10px;
+    }
+
+    .flex-header {
+        flex-direction: column !important;
+        align-items: stretch !important;
+        gap: 0 !important;
+    }
+
+    .inline-search {
+        margin-top: 0 !important;
+        margin-bottom: 5px !important;
+    }
+
+    .inline-search .prefix {
+        font-size: 1.5rem;
+        top: 0.5rem;
+    }
+
+    .sort-field {
+        width: 100% !important;
+        margin-top: -10px;
+    }
+
+    .main-content {
+        padding: 0 10px;
+        padding-top: 5px;
+    }
+
+    #dashboard {
+        margin-top: 10px;
+    }
+
+    #dashboard .col {
+        margin-bottom: 5px;
+    }
+
+    .card-panel {
+        display: flex;
+        align-items: center;
+        justify-content: flex-start;
+        text-align: left !important;
+        padding: 12px !important;
+        margin: 0 !important;
+    }
+
+    .card-panel i.medium {
+        font-size: 2rem !important;
+        margin-right: 15px;
+    }
+
+    .card-panel div.stats-text {
+        display: flex;
+        flex-direction: column;
+    }
+
+    .card-panel h5 {
+        font-size: 1.2rem !important;
+        margin: 0 !important;
+        line-height: 1.2;
+    }
+
+    .card-panel p {
+        font-size: 0.8rem !important;
+        margin: 0 !important;
+    }
+
+    /* 图书卡片移动端优化 */
+    .book-card .card-title {
+        font-size: 1.1rem !important;
+        font-weight: bold;
+    }
+
+    .category-chip {
+        top: 10px;
+        right: 10px;
+        font-size: 0.7rem;
+    }
+
+    .card-action {
+        display: flex !important;
+        flex-wrap: nowrap !important;
+        justify-content: space-between !important;
+        padding: 8px !important;
+    }
+
+    .card-action a {
+        margin: 0 !important;
+        padding: 5px !important;
+        font-size: 0.8rem !important;
+        display: flex;
+        align-items: center;
+    }
+
+    .card-action a i {
+        font-size: 1.1rem !important;
+        margin-right: 2px !important;
+    }
+}
+
+/* 扫码相关样式 */
+.scanner-buttons {
+    position: absolute !important;
+    right: 5px;
+    top: 5px;
+    z-index: 5;
+    display: flex;
+    gap: 5px;
+}
+
+.scanner-btn {
+    width: 32px !important;
+    height: 32px !important;
+    line-height: 32px !important;
+}
+
+.scanner-btn i {
+    font-size: 18px !important;
+    line-height: 32px !important;
+}
+
+#reader {
+    background: #f8f9fa;
+    border: 1px dashed #ccc;
+    margin-bottom: 15px;
+}
+
+#image-preview {
+    background: #f8f9fa;
+    border: 1px solid #e0e0e0;
+    border-radius: 8px;
+    margin-bottom: 15px;
+    min-height: 100px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+
+#scan-preview-img {
+    border-radius: 8px;
+}
+
+#scan-loading {
+    background: rgba(255, 255, 255, 0.9);
+    padding: 20px;
+    border-radius: 12px;
+    box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+#scan-loading p {
+    margin-top: 10px;
+    font-weight: 500;
+}

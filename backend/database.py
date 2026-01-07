@@ -117,9 +117,74 @@ def init_db():
                 FOREIGN KEY (user_id) REFERENCES users(id)
             )
         ''')
+
+        # 系统设置表
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS system_settings (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                key TEXT UNIQUE NOT NULL,
+                value TEXT NOT NULL,
+                updated_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+            )
+        ''')
+
+        # 消息表
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS messages (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                sender_name TEXT NOT NULL DEFAULT 'system',
+                receiver_id INTEGER NOT NULL,
+                title TEXT NOT NULL,
+                content TEXT,
+                is_read INTEGER DEFAULT 0,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (receiver_id) REFERENCES users(id)
+            )
+        ''')
+
+        # 操作日志表
+        cursor.execute('''
+            CREATE TABLE IF NOT EXISTS operation_logs (
+                id INTEGER PRIMARY KEY AUTOINCREMENT,
+                user_id INTEGER,
+                action TEXT NOT NULL,
+                detail TEXT,
+                created_at TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+                FOREIGN KEY (user_id) REFERENCES users(id)
+            )
+        ''')
+        
+        # 检查并添加 location 列（数据库迁移）
+        cursor.execute("PRAGMA table_info(books)")
+        columns = [row[1] for row in cursor.fetchall()]
+        if 'location' not in columns:
+            cursor.execute("ALTER TABLE books ADD COLUMN location TEXT")
         
         conn.commit()
+
+        # 初始化系统设置
+        default_settings = [
+            ('min_borrow_days', '1'),
+            ('max_borrow_days', '60'),
+            ('fine_per_day', '0.5'),
+        ]
+        for key, value in default_settings:
+            cursor.execute("SELECT id FROM system_settings WHERE key = ?", (key,))
+            if not cursor.fetchone():
+                cursor.execute('''
+                    INSERT INTO system_settings (key, value) VALUES (?, ?)
+                ''', (key, value))
+        conn.commit()
         
+        # 检查并创建超级管理员账号
+        cursor.execute("SELECT id FROM users WHERE student_id = 'superadmin'")
+        if not cursor.fetchone():
+            cursor.execute('''
+                INSERT INTO users (student_id, password_hash, name, role, first_login)
+                VALUES (?, ?, ?, ?, ?)
+            ''', ('superadmin', get_password_hash('superadmin123'), '超级管理员', 'super_admin', 0))
+            conn.commit()
+
         # 检查并创建管理员账号
         cursor.execute("SELECT id FROM users WHERE student_id = 'admin'")
         if not cursor.fetchone():

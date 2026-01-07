@@ -122,7 +122,9 @@ const handleLogin = async () => {
       localStorage.setItem('token', res.token)
       localStorage.setItem('user', JSON.stringify(res.user))
       
-      if (res.user.role === 'admin') {
+      if (res.user.role === 'super_admin') {
+        router.push('/super-admin')
+      } else if (res.user.role === 'admin') {
         router.push('/admin')
       } else {
         router.push('/')
@@ -160,7 +162,9 @@ const handleChangePassword = async () => {
     
     showChangePassword.value = false
     
-    if (tempUser.value.role === 'admin') {
+    if (tempUser.value.role === 'super_admin') {
+      router.push('/super-admin')
+    } else if (tempUser.value.role === 'admin') {
       router.push('/admin')
     } else {
       router.push('/')

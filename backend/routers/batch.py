@@ -13,7 +13,7 @@ import os
 import shutil
 
 from database import get_db, get_password_hash
-from auth import require_admin
+from auth import require_admin_or_super
 from models import MessageResponse, BookCreate, UserCreate
 
 router = APIRouter(prefix="/api/batch", tags=["batch"])
@@ -21,7 +21,7 @@ router = APIRouter(prefix="/api/batch", tags=["batch"])
 # ==================== 导出功能 ====================
 
 @router.get("/export/books")
-async def export_books(current_user: dict = Depends(require_admin)):
+async def export_books(current_user: dict = Depends(require_admin_or_super)):
     """导出所有图书"""
     with get_db() as conn:
         # 使用 pandas 直接读取 SQL
@@ -45,7 +45,7 @@ async def export_books(current_user: dict = Depends(require_admin)):
         )
 
 @router.get("/export/users")
-async def export_users(current_user: dict = Depends(require_admin)):
+async def export_users(current_user: dict = Depends(require_admin_or_super)):
     """导出所有用户"""
     with get_db() as conn:
         df = pd.read_sql_query("SELECT id, student_id, name, role, created_at FROM users", conn)
@@ -67,7 +67,7 @@ async def export_users(current_user: dict = Depends(require_admin)):
 @router.post("/import/books", response_model=MessageResponse)
 async def import_books(
     file: UploadFile = File(...),
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin_or_super)
 ):
     """批量导入图书 (Excel)"""
     if not file.filename.endswith(('.xlsx', '.xls')):
@@ -125,7 +125,7 @@ async def import_books(
 @router.post("/import/users", response_model=MessageResponse)
 async def import_users(
     file: UploadFile = File(...),
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin_or_super)
 ):
     """批量导入用户 (Excel)"""
     if not file.filename.endswith(('.xlsx', '.xls')):

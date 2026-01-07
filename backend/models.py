@@ -2,7 +2,7 @@
 Pydantic 数据模型定义
 """
 from pydantic import BaseModel
-from typing import Optional
+from typing import Optional, List
 from datetime import datetime
 
 # ==================== 用户相关模型 ====================
@@ -40,6 +40,7 @@ class BookCreate(BaseModel):
     category: str = "其它"
     cover: Optional[str] = None
     total_count: int = 1
+    location: Optional[str] = None
 
 class BookUpdate(BaseModel):
     title: Optional[str] = None
@@ -48,6 +49,7 @@ class BookUpdate(BaseModel):
     category: Optional[str] = None
     cover: Optional[str] = None
     total_count: Optional[int] = None
+    location: Optional[str] = None
 
 class BookResponse(BaseModel):
     id: int
@@ -59,6 +61,7 @@ class BookResponse(BaseModel):
     total_count: int
     available_count: int
     status: str
+    location: Optional[str] = None
     created_at: Optional[str] = None
 
 # ==================== 借阅相关模型 ====================
@@ -106,4 +109,46 @@ class FavoriteResponse(BaseModel):
     book_title: str
     book_author: str
     book_cover: Optional[str]
+    created_at: str
+
+# ==================== 系统设置模型 ====================
+
+class SystemSettingsUpdate(BaseModel):
+    min_borrow_days: Optional[int] = None
+    max_borrow_days: Optional[int] = None
+    fine_per_day: Optional[float] = None
+
+class SystemSettingsResponse(BaseModel):
+    min_borrow_days: int
+    max_borrow_days: int
+    fine_per_day: float
+
+# ==================== 消息/通知模型 ====================
+
+class NotificationCreate(BaseModel):
+    receiver_ids: List[int] = []  # 空列表表示群发所有用户
+    title: str
+    content: str
+
+class NotificationResponse(BaseModel):
+    id: int
+    sender_name: str
+    title: str
+    content: Optional[str]
+    is_read: bool
+    created_at: str
+
+# ==================== 管理员管理模型 ====================
+
+class AdminCreate(BaseModel):
+    student_id: str
+    name: str
+    password: Optional[str] = "admin123"
+
+class OperationLogResponse(BaseModel):
+    id: int
+    user_id: Optional[int]
+    user_name: Optional[str]
+    action: str
+    detail: Optional[str]
     created_at: str

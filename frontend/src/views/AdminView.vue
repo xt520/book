@@ -519,7 +519,7 @@
                 <label class="label-medium">作者 *</label>
                 <input type="text" v-model="bookForm.author" required />
               </div>
-              <div class="form-row">
+                <div class="form-row">
                 <div class="form-group">
                   <label class="label-medium">分类</label>
                   <select v-model="bookForm.category">
@@ -537,6 +537,10 @@
                   <label class="label-medium">库存</label>
                   <input type="number" v-model.number="bookForm.total_count" min="1" />
                 </div>
+              </div>
+              <div class="form-group">
+                <label class="label-medium">藏书位置</label>
+                <input type="text" v-model="bookForm.location" placeholder="例如：A区3架第5层" />
               </div>
             </div>
           </div>
@@ -591,7 +595,8 @@ const bookForm = ref({
   isbn: '',
   category: '编程',
   cover: '',
-  total_count: 1
+  total_count: 1,
+  location: ''
 })
 
 // Scanning state
@@ -834,7 +839,8 @@ const openBookModal = (book = null) => {
       isbn: '',
       category: '编程',
       cover: '',
-      total_count: 1
+      total_count: 1,
+      location: ''
     }
   }
   showBookModal.value = true
@@ -1826,5 +1832,281 @@ const handleImportUsers = async (e) => {
   height: 1px;
   background: var(--md-outline-variant);
   margin: 24px 0;
+}
+
+/* ==================== 响应式设计 ==================== */
+
+/* 平板及以下 */
+@media (max-width: 1024px) {
+  .admin-layout {
+    flex-direction: column;
+  }
+  
+  .sidebar {
+    width: 100%;
+    border-right: none;
+    border-bottom: 1px solid var(--md-outline-variant);
+    padding: 8px;
+  }
+  
+  .sidebar-content {
+    display: flex;
+    overflow-x: auto;
+    gap: 4px;
+    padding-bottom: 8px;
+  }
+  
+  .menu-item {
+    flex-shrink: 0;
+    padding: 10px 16px;
+  }
+  
+  .menu-text {
+    white-space: nowrap;
+  }
+  
+  .main-content {
+    padding: 16px;
+  }
+  
+  .panel {
+    padding: 16px;
+  }
+}
+
+/* 手机端 */
+@media (max-width: 768px) {
+  .admin-nav {
+    padding: 12px 16px;
+    flex-wrap: wrap;
+    gap: 8px;
+  }
+  
+  .nav-left {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .nav-brand {
+    font-size: 16px;
+  }
+  
+  .nav-right {
+    width: 100%;
+    justify-content: space-between;
+  }
+  
+  .menu-item {
+    padding: 8px 12px;
+    font-size: 12px;
+  }
+  
+  .menu-icon {
+    font-size: 16px;
+  }
+  
+  .main-content {
+    padding: 12px;
+  }
+  
+  .panel-header {
+    flex-direction: column;
+    align-items: flex-start;
+    gap: 12px;
+  }
+  
+  .panel-header h2 {
+    font-size: 18px;
+  }
+  
+  .header-actions {
+    width: 100%;
+  }
+  
+  .header-actions button {
+    flex: 1;
+  }
+  
+  /* 表格响应式 */
+  .table-container {
+    margin: 0 -12px;
+    padding: 0 12px;
+  }
+  
+  .data-table {
+    font-size: 12px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 8px 6px;
+  }
+  
+  /* 隐藏次要列 */
+  .data-table th:nth-child(4),
+  .data-table td:nth-child(4),
+  .data-table th:nth-child(5),
+  .data-table td:nth-child(5) {
+    display: none;
+  }
+  
+  .action-buttons {
+    flex-direction: column;
+    gap: 4px;
+  }
+  
+  .action-buttons button {
+    width: 100%;
+    padding: 6px 8px;
+    font-size: 11px;
+  }
+  
+  /* 搜索栏 */
+  .search-bar {
+    flex-direction: column;
+    gap: 8px;
+  }
+  
+  .search-input {
+    width: 100%;
+    max-width: none;
+  }
+  
+  .filter-select {
+    width: 100%;
+  }
+  
+  /* 添加用户表单 */
+  .add-user-section {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .add-user-section input,
+  .add-user-section button {
+    width: 100%;
+  }
+  
+  /* 扫描页面 */
+  .scan-container {
+    padding: 16px;
+  }
+  
+  .scan-input-section {
+    flex-direction: column;
+  }
+  
+  .scan-input-section input {
+    width: 100%;
+  }
+  
+  .scan-input-section button {
+    width: 100%;
+  }
+  
+  /* 弹窗响应式 */
+  .md-dialog {
+    width: 95%;
+    max-width: none;
+    max-height: 90vh;
+    margin: 16px;
+    padding: 20px;
+  }
+  
+  .md-dialog-title {
+    font-size: 18px;
+  }
+  
+  .book-form-content {
+    flex-direction: column;
+    gap: 16px;
+  }
+  
+  .cover-preview {
+    width: 100%;
+    height: 200px;
+  }
+  
+  .form-fields {
+    width: 100%;
+  }
+  
+  .form-row {
+    flex-direction: column;
+    gap: 12px;
+  }
+  
+  .form-row .form-group {
+    width: 100%;
+  }
+  
+  .md-dialog-actions {
+    flex-direction: column-reverse;
+    gap: 8px;
+  }
+  
+  .md-dialog-actions button {
+    width: 100%;
+  }
+  
+  /* 分页 */
+  .pagination {
+    flex-wrap: wrap;
+    gap: 8px;
+    justify-content: center;
+  }
+  
+  .page-info {
+    width: 100%;
+    text-align: center;
+    order: -1;
+  }
+}
+
+/* 超小屏幕 */
+@media (max-width: 400px) {
+  .admin-nav {
+    padding: 8px 12px;
+  }
+  
+  .nav-brand {
+    font-size: 14px;
+  }
+  
+  .role-chip {
+    font-size: 10px;
+    padding: 2px 6px;
+  }
+  
+  .menu-item {
+    padding: 6px 10px;
+    font-size: 11px;
+  }
+  
+  .menu-icon {
+    font-size: 14px;
+  }
+  
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .stat-card {
+    padding: 12px;
+  }
+  
+  .stat-value {
+    font-size: 20px;
+  }
+  
+  .data-table {
+    font-size: 11px;
+  }
+  
+  .data-table th,
+  .data-table td {
+    padding: 6px 4px;
+  }
 }
 </style>

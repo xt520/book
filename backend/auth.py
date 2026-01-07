@@ -79,6 +79,24 @@ def require_admin(current_user: dict = Depends(get_current_user)) -> dict:
         )
     return current_user
 
+def require_super_admin(current_user: dict = Depends(get_current_user)) -> dict:
+    """要求超级管理员权限"""
+    if current_user["role"] != "super_admin":
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要超级管理员权限"
+        )
+    return current_user
+
+def require_admin_or_super(current_user: dict = Depends(get_current_user)) -> dict:
+    """要求管理员或超级管理员权限"""
+    if current_user["role"] not in ["admin", "super_admin"]:
+        raise HTTPException(
+            status_code=status.HTTP_403_FORBIDDEN,
+            detail="需要管理员权限"
+        )
+    return current_user
+
 def authenticate_user(student_id: str, password: str) -> Optional[dict]:
     """验证用户登录"""
     with get_db() as conn:

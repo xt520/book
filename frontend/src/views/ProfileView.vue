@@ -27,19 +27,20 @@
           <span class="stat-num headline-large">{{ returnedCount }}</span>
           <span class="stat-text body-medium">已归还</span>
         </div>
-        <div class="stat-card warning" v-if="overdueCount > 0">
+        <div class="stat-card" :class="{ warning: overdueCount > 0 }">
           <span class="stat-icon">⚠️</span>
           <span class="stat-num headline-large">{{ overdueCount }}</span>
           <span class="stat-text body-medium">已逾期</span>
         </div>
+        <div class="stat-card clickable" @click="activeTab = 'messages'">
+          <span class="stat-icon">📬</span>
+          <span class="stat-num headline-large">{{ unreadCount }}</span>
+          <span class="stat-text body-medium">未读消息</span>
+        </div>
       </div>
 
-      <!-- Borrow Records -->
+      <!-- Tabs Section -->
       <div class="records-section md-card-outlined">
-        <div class="records-header">
-          <h3 class="title-large">📚 我的借阅记录</h3>
-        </div>
-        
         <div class="tab-bar">
           <button 
             :class="['tab-btn', { active: activeTab === 'borrowed' }]"
@@ -59,9 +60,22 @@
           >
             我的收藏
           </button>
+          <button 
+            :class="['tab-btn', { active: activeTab === 'messages' }]"
+            @click="activeTab = 'messages'"
+          >
+            消息 <span v-if="unreadCount > 0" class="badge">{{ unreadCount }}</span>
+          </button>
+          <button 
+            :class="['tab-btn', { active: activeTab === 'password' }]"
+            @click="activeTab = 'password'"
+          >
+            修改密码
+          </button>
         </div>
 
-        <div class="record-list">
+        <!-- Borrow Records -->
+        <div v-if="activeTab === 'borrowed' || activeTab === 'returned' || activeTab === 'favorites'" class="record-list">
           <div 
             v-for="record in filteredRecords" 
             :key="record.id" 
@@ -87,9 +101,6 @@
                  <span class="body-small">收藏于：{{ formatDate(record.created_at) }}</span>
               </div>
             </div>
-            
-            <!-- Removed handleReturn button logic for favorites, only keep for borrowed if needed, 
-                 but original code didn't show return button in template, only handleReturn function existed -->
           </div>
           
           <div v-if="filteredRecords.length === 0" class="empty-records">
@@ -103,6 +114,76 @@
             </p>
           </div>
         </div>
+
+        <!-- Messages -->
+        <div v-if="activeTab === 'messages'" class="message-list">
+          <div class="message-header">
+            <button v-if="unreadCount > 0" class="md-text-button" @click="markAllRead">
+              全部标为已读
+            </button>
+          </div>
+          <div 
+            v-for="msg in messages" 
+            :key="msg.id" 
+            :class="['message-item', { unread: !msg.is_read }]"
+            @click="markMessageRead(msg)"
+          >
+            <div class="message-sender">
+              <span class="sender-icon">{{ msg.sender_name === 'system' ? '🔔' : '📢' }}</span>
+              <span class="sender-name">{{ msg.sender_name === 'system' ? '系统通知' : '管理员通知' }}</span>
+              <span class="message-time">{{ formatDate(msg.created_at) }}</span>
+            </div>
+            <h4 class="message-title">{{ msg.title }}</h4>
+            <p class="message-content" v-if="msg.content">{{ msg.content }}</p>
+          </div>
+          
+          <div v-if="messages.length === 0" class="empty-records">
+            <span class="empty-icon">📭</span>
+            <p class="body-medium">暂无消息</p>
+          </div>
+        </div>
+
+        <!-- Password Change -->
+        <div v-if="activeTab === 'password'" class="password-form">
+          <h3 class="title-large">🔐 修改密码</h3>
+          <div class="form-group">
+            <label class="label-medium">当前密码</label>
+            <input 
+              type="password" 
+              v-model="passwordForm.old_password" 
+              placeholder="输入当前密码"
+              class="input-field"
+            />
+          </div>
+          <div class="form-group">
+            <label class="label-medium">新密码</label>
+            <input 
+              type="password" 
+              v-model="passwordForm.new_password" 
+              placeholder="输入新密码（至少6位）"
+              class="input-field"
+            />
+          </div>
+          <div class="form-group">
+            <label class="label-medium">确认新密码</label>
+            <input 
+              type="password" 
+              v-model="passwordForm.confirm_password" 
+              placeholder="再次输入新密码"
+              class="input-field"
+            />
+          </div>
+          <button 
+            class="md-filled-button" 
+            @click="changePassword"
+            :disabled="!passwordForm.old_password || !passwordForm.new_password || passwordForm.new_password !== passwordForm.confirm_password"
+          >
+            修改密码
+          </button>
+          <p v-if="passwordForm.new_password && passwordForm.confirm_password && passwordForm.new_password !== passwordForm.confirm_password" class="error-text">
+            两次密码输入不一致
+          </p>
+        </div>
       </div>
     </div>
   </div>
@@ -112,13 +193,22 @@
 import { ref, computed, onMounted } from 'vue'
 import { useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
-import { borrowApi, socialApi } from '../api'
+import { borrowApi, socialApi, messageApi, authApi } from '../api'
 
 const router = useRouter()
 const user = ref(null)
 const records = ref([])
 const favoriteRecords = ref([])
+const messages = ref([])
+const unreadCount = ref(0)
 const activeTab = ref('borrowed')
+
+// Password form
+const passwordForm = ref({
+  old_password: '',
+  new_password: '',
+  confirm_password: ''
+})
 
 const borrowedCount = computed(() => 
   records.value.filter(r => r.status === 'borrowed').length
@@ -181,6 +271,65 @@ const loadFavorites = async () => {
   }
 }
 
+const loadMessages = async () => {
+  try {
+    const res = await messageApi.getList()
+    messages.value = res.items
+  } catch (e) {
+    console.error('加载消息失败', e)
+  }
+}
+
+const loadUnreadCount = async () => {
+  try {
+    const res = await messageApi.getUnreadCount()
+    unreadCount.value = res.count
+  } catch (e) {
+    console.error('加载未读数失败', e)
+  }
+}
+
+const markMessageRead = async (msg) => {
+  if (msg.is_read) return
+  try {
+    await messageApi.markRead(msg.id)
+    msg.is_read = true
+    unreadCount.value = Math.max(0, unreadCount.value - 1)
+  } catch (e) {
+    console.error('标记已读失败', e)
+  }
+}
+
+const markAllRead = async () => {
+  try {
+    await messageApi.markAllRead()
+    messages.value.forEach(msg => msg.is_read = true)
+    unreadCount.value = 0
+  } catch (e) {
+    console.error('标记全部已读失败', e)
+  }
+}
+
+const changePassword = async () => {
+  if (passwordForm.value.new_password.length < 6) {
+    alert('新密码至少需要6位')
+    return
+  }
+  
+  try {
+    const token = localStorage.getItem('token')
+    await authApi.changePassword(
+      passwordForm.value.old_password,
+      passwordForm.value.new_password,
+      token
+    )
+    alert('密码修改成功！')
+    passwordForm.value = { old_password: '', new_password: '', confirm_password: '' }
+  } catch (e) {
+    alert(e.detail || '密码修改失败，请检查原密码是否正确')
+  }
+}
+
 onMounted(() => {
   const userStr = localStorage.getItem('user')
   if (userStr) {
@@ -189,6 +338,8 @@ onMounted(() => {
 
   loadRecords()
   loadFavorites()
+  loadMessages()
+  loadUnreadCount()
 })
 </script>
 
@@ -416,6 +567,257 @@ onMounted(() => {
   .logout-btn {
     width: 100%;
     margin-top: 12px;
+  }
+  
+  .tab-bar {
+    flex-wrap: wrap;
+  }
+}
+
+/* Clickable stat card */
+.stat-card.clickable {
+  cursor: pointer;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.stat-card.clickable:hover {
+  transform: translateY(-2px);
+  box-shadow: var(--md-elevation-2);
+}
+
+/* Badge for unread count */
+.badge {
+  background: var(--md-error);
+  color: white;
+  font-size: 11px;
+  padding: 2px 6px;
+  border-radius: 10px;
+  margin-left: 4px;
+}
+
+/* Message list styles */
+.message-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+}
+
+.message-header {
+  display: flex;
+  justify-content: flex-end;
+  margin-bottom: 8px;
+}
+
+.message-item {
+  padding: 16px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-corner-medium);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.message-item:hover {
+  background: var(--md-surface-container);
+}
+
+.message-item.unread {
+  border-left: 4px solid var(--md-primary);
+  background: var(--md-primary-container);
+}
+
+.message-sender {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin-bottom: 8px;
+}
+
+.sender-icon {
+  font-size: 18px;
+}
+
+.sender-name {
+  font-weight: 500;
+  color: var(--md-on-surface);
+}
+
+.message-time {
+  color: var(--md-on-surface-variant);
+  font-size: 12px;
+  margin-left: auto;
+}
+
+.message-title {
+  font-weight: 600;
+  color: var(--md-on-surface);
+  margin-bottom: 4px;
+}
+
+.message-content {
+  color: var(--md-on-surface-variant);
+  white-space: pre-wrap;
+}
+
+/* Password form styles */
+.password-form {
+  max-width: 400px;
+}
+
+.password-form h3 {
+  margin-bottom: 24px;
+}
+
+.form-group {
+  margin-bottom: 20px;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--md-on-surface-variant);
+}
+
+.input-field {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--md-outline);
+  border-radius: var(--md-shape-corner-small);
+  font-size: 14px;
+  background: var(--md-surface);
+  color: var(--md-on-surface);
+}
+
+.input-field:focus {
+  outline: none;
+  border-color: var(--md-primary);
+}
+
+.md-filled-button {
+  background: var(--md-primary);
+  color: var(--md-on-primary);
+  border: none;
+  padding: 12px 24px;
+  border-radius: var(--md-shape-corner-full);
+  font-weight: 500;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.md-filled-button:hover:not(:disabled) {
+  box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+}
+
+.md-filled-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+}
+
+.md-text-button {
+  background: transparent;
+  border: none;
+  color: var(--md-primary);
+  padding: 8px 16px;
+  border-radius: var(--md-shape-corner-full);
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.md-text-button:hover {
+  background: var(--md-primary-container);
+}
+
+.error-text {
+  color: var(--md-error);
+  font-size: 12px;
+  margin-top: 8px;
+}
+
+/* ==================== 响应式补充 ==================== */
+
+@media (max-width: 600px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 12px;
+  }
+  
+  .stat-card {
+    padding: 16px;
+  }
+  
+  .stat-icon {
+    font-size: 24px;
+  }
+  
+  .stat-num {
+    font-size: 24px;
+  }
+  
+  .tab-bar {
+    flex-wrap: wrap;
+    gap: 6px;
+  }
+  
+  .tab-btn {
+    padding: 8px 16px;
+    font-size: 13px;
+  }
+  
+  .message-sender {
+    flex-wrap: wrap;
+  }
+  
+  .message-time {
+    width: 100%;
+    margin-left: 26px;
+  }
+  
+  .message-title {
+    font-size: 14px;
+  }
+  
+  .message-content {
+    font-size: 13px;
+  }
+  
+  .password-form {
+    max-width: 100%;
+  }
+  
+  .password-form h3 {
+    font-size: 18px;
+    margin-bottom: 16px;
+  }
+  
+  .input-field {
+    padding: 10px;
+  }
+  
+  .md-filled-button {
+    width: 100%;
+    padding: 12px;
+  }
+}
+
+@media (max-width: 400px) {
+  .stats-grid {
+    grid-template-columns: repeat(2, 1fr);
+    gap: 8px;
+  }
+  
+  .stat-card {
+    padding: 12px;
+  }
+  
+  .stat-icon {
+    font-size: 20px;
+  }
+  
+  .stat-num {
+    font-size: 20px;
+  }
+  
+  .stat-text {
+    font-size: 11px;
   }
 }
 </style>

@@ -6,7 +6,7 @@ from typing import Optional, List
 
 from database import get_db
 from models import BookCreate, BookUpdate, BookResponse, MessageResponse
-from auth import get_current_user, require_admin
+from auth import get_current_user, require_admin, require_admin_or_super
 
 router = APIRouter(prefix="/api/books", tags=["books"])
 
@@ -107,7 +107,7 @@ async def get_book(book_id: int, current_user: dict = Depends(get_current_user))
         return dict(row)
 
 @router.post("", response_model=MessageResponse)
-async def create_book(book: BookCreate, current_user: dict = Depends(require_admin)):
+async def create_book(book: BookCreate, current_user: dict = Depends(require_admin_or_super)):
     """上架新图书（仅管理员）"""
     from covers_util import download_cover
     
@@ -128,15 +128,15 @@ async def create_book(book: BookCreate, current_user: dict = Depends(require_adm
             local_cover, cover_status = await download_cover(book.cover, book.isbn)
         
         cursor.execute('''
-            INSERT INTO books (title, author, isbn, category, cover, cover_status, total_count, available_count)
-            VALUES (?, ?, ?, ?, ?, ?, ?, ?)
-        ''', (book.title, book.author, book.isbn, book.category, local_cover, cover_status, book.total_count, book.total_count))
+            INSERT INTO books (title, author, isbn, category, cover, cover_status, total_count, available_count, location)
+            VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+        ''', (book.title, book.author, book.isbn, book.category, local_cover, cover_status, book.total_count, book.total_count, book.location))
         
         conn.commit()
         return MessageResponse(message="图书上架成功")
 
 @router.put("/{book_id}", response_model=MessageResponse)
-async def update_book(book_id: int, book: BookUpdate, current_user: dict = Depends(require_admin)):
+async def update_book(book_id: int, book: BookUpdate, current_user: dict = Depends(require_admin_or_super)):
     """更新图书信息（仅管理员）"""
     with get_db() as conn:
         cursor = conn.cursor()
@@ -166,6 +166,9 @@ async def update_book(book_id: int, book: BookUpdate, current_user: dict = Depen
         if book.cover is not None:
             updates.append("cover = ?")
             params.append(book.cover)
+        if book.location is not None:
+            updates.append("location = ?")
+            params.append(book.location)
         if book.total_count is not None:
             # 计算可借数量的变化
             diff = book.total_count - existing["total_count"]
@@ -183,7 +186,7 @@ async def update_book(book_id: int, book: BookUpdate, current_user: dict = Depen
         return MessageResponse(message="图书信息更新成功")
 
 @router.delete("/{book_id}", response_model=MessageResponse)
-async def delete_book(book_id: int, current_user: dict = Depends(require_admin)):
+async def delete_book(book_id: int, current_user: dict = Depends(require_admin_or_super)):
     """下架图书（仅管理员）"""
     with get_db() as conn:
         cursor = conn.cursor()

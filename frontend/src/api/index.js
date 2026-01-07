@@ -111,4 +111,28 @@ export const batchApi = {
     }
 }
 
+// ==================== 超级管理员 API ====================
+
+export const adminApi = {
+    getSettings: () => api.get('/api/admin/settings'),
+    updateSettings: (data) => api.put('/api/admin/settings', data),
+    getAdmins: () => api.get('/api/admin/admins'),
+    createAdmin: (data) => api.post('/api/admin/admins', data),
+    deleteAdmin: (id) => api.delete(`/api/admin/admins/${id}`),
+    resetAdminPassword: (id) => api.post(`/api/admin/admins/${id}/reset-password`),
+    getLogs: (params = {}) => api.get('/api/admin/logs', { params }),
+    batchOverdueNotify: () => api.post('/api/admin/batch-overdue-notify')
+}
+
+// ==================== 消息 API ====================
+
+export const messageApi = {
+    getList: (params = {}) => api.get('/api/messages', { params }),
+    getUnreadCount: () => api.get('/api/messages/unread-count'),
+    markRead: (id) => api.post(`/api/messages/${id}/read`),
+    markAllRead: () => api.post('/api/messages/read-all'),
+    send: (data) => api.post('/api/messages/send', data),
+    getUsersForSend: (keyword = '') => api.get('/api/messages/users-for-send', { params: { keyword } })
+}
+
 export default api

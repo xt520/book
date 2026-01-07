@@ -5,7 +5,7 @@ from fastapi import APIRouter, Depends, HTTPException, Query
 from typing import List, Optional
 from database import get_db, get_password_hash
 from models import UserCreate, UserInfo, MessageResponse
-from auth import require_admin
+from auth import require_admin_or_super
 
 router = APIRouter(prefix="/api/users", tags=["users"])
 
@@ -14,7 +14,7 @@ async def get_users(
     page: int = Query(1, ge=1),
     page_size: int = Query(20, ge=1, le=100),
     keyword: Optional[str] = None,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin_or_super)
 ):
     """获取用户列表（仅管理员）"""
     with get_db() as conn:
@@ -48,7 +48,7 @@ async def get_users(
 @router.post("", response_model=MessageResponse)
 async def create_user(
     user: UserCreate,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin_or_super)
 ):
     """创建新用户（仅管理员）"""
     with get_db() as conn:
@@ -73,7 +73,7 @@ async def create_user(
 @router.delete("/{user_id}", response_model=MessageResponse)
 async def delete_user(
     user_id: int,
-    current_user: dict = Depends(require_admin)
+    current_user: dict = Depends(require_admin_or_super)
 ):
     """删除用户（仅管理员）"""
     with get_db() as conn:

@@ -7,7 +7,7 @@ from datetime import datetime, timedelta
 
 from database import get_db
 from models import BorrowRequest, BorrowRecordResponse, MessageResponse
-from auth import get_current_user, require_admin
+from auth import get_current_user, require_admin_or_super
 
 router = APIRouter(prefix="/api/borrow", tags=["borrow"])
 
@@ -88,6 +88,19 @@ async def borrow_book(
     """借阅图书"""
     with get_db() as conn:
         cursor = conn.cursor()
+        
+        # 获取系统设置的借阅天数范围
+        cursor.execute("SELECT key, value FROM system_settings WHERE key IN ('min_borrow_days', 'max_borrow_days')")
+        settings = {row["key"]: int(row["value"]) for row in cursor.fetchall()}
+        min_days = settings.get("min_borrow_days", 1)
+        max_days = settings.get("max_borrow_days", 60)
+        
+        # 验证借阅天数
+        if request.days < min_days or request.days > max_days:
+            raise HTTPException(
+                status_code=400, 
+                detail=f"借阅天数必须在 {min_days} 到 {max_days} 天之间"
+            )
         
         # 检查图书是否存在且可借
         cursor.execute("SELECT * FROM books WHERE id = ? AND status = 'active'", (book_id,))
@@ -246,7 +259,7 @@ async def get_my_borrows(current_user: dict = Depends(get_current_user)):
         return [dict(row) for row in rows]
 
 @router.get("/overdue")
-async def get_overdue_records(current_user: dict = Depends(require_admin)):
+async def get_overdue_records(current_user: dict = Depends(require_admin_or_super)):
     """获取逾期未还记录（仅管理员）"""
     with get_db() as conn:
         cursor = conn.cursor()

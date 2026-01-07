@@ -29,6 +29,11 @@
             <span class="isbn-chip">ISBN: {{ book.isbn || '未知' }}</span>
           </div>
           
+          <div v-if="book.location" class="location-info">
+            <span class="location-icon">📍</span>
+            <span class="location-text">藏书位置：{{ book.location }}</span>
+          </div>
+          
           <div class="stock-info">
             <div class="stock-item">
               <span class="label">可借</span>
@@ -40,6 +45,21 @@
               <span class="label">总藏</span>
               <span class="value">{{ book.total_count }}</span>
             </div>
+          </div>
+          
+          <div class="borrow-options" v-if="book.available_count > 0">
+            <label class="label-medium">借阅天数：</label>
+            <div class="days-selector">
+              <input 
+                type="range" 
+                v-model.number="borrowDays" 
+                :min="borrowSettings.min" 
+                :max="borrowSettings.max" 
+                class="days-slider"
+              />
+              <span class="days-value">{{ borrowDays }} 天</span>
+            </div>
+            <p class="days-hint">可选择 {{ borrowSettings.min }} - {{ borrowSettings.max }} 天</p>
           </div>
           
           <div class="actions">
@@ -125,7 +145,7 @@
 import { ref, onMounted } from 'vue'
 import { useRoute, useRouter } from 'vue-router'
 import NavBar from '../components/NavBar.vue'
-import { bookApi, borrowApi, socialApi } from '../api'
+import { bookApi, borrowApi, socialApi, adminApi } from '../api'
 
 const route = useRoute()
 const router = useRouter()
@@ -140,6 +160,21 @@ const newReview = ref({
   rating: 5,
   content: ''
 })
+
+const borrowDays = ref(30)
+const borrowSettings = ref({ min: 1, max: 60 })
+
+const loadBorrowSettings = async () => {
+  try {
+    const settings = await adminApi.getSettings()
+    borrowSettings.value.min = settings.min_borrow_days
+    borrowSettings.value.max = settings.max_borrow_days
+    borrowDays.value = Math.min(30, settings.max_borrow_days)
+  } catch (e) {
+    // Use defaults if loading fails (user might not be super admin)
+    console.log('Using default borrow settings')
+  }
+}
 
 const loadData = async () => {
   loading.value = true
@@ -180,10 +215,10 @@ const toggleFavorite = async () => {
 }
 
 const handleBorrow = async () => {
-  if (!confirm(`确认借阅《${book.value.title}》？`)) return
+  if (!confirm(`确认借阅《${book.value.title}》${borrowDays.value}天？`)) return
   
   try {
-    await borrowApi.borrow(bookId)
+    await borrowApi.borrow(bookId, borrowDays.value)
     alert('借阅成功！')
     loadData() // Reload to update stock
   } catch (e) {
@@ -209,6 +244,7 @@ const formatDate = (dateStr) => {
 
 onMounted(() => {
   loadData()
+  loadBorrowSettings()
 })
 </script>
 
@@ -460,6 +496,134 @@ onMounted(() => {
     width: 160px;
     height: 220px;
     align-self: center;
+  }
+}
+
+.location-info {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px 16px;
+  background: var(--md-tertiary-container);
+  border-radius: var(--md-shape-corner-medium);
+  margin-bottom: 20px;
+}
+
+.location-icon {
+  font-size: 20px;
+}
+
+.location-text {
+  color: var(--md-on-tertiary-container);
+  font-weight: 500;
+}
+
+.borrow-options {
+  margin-bottom: 24px;
+  padding: 16px;
+  background: var(--md-surface-container-low);
+  border-radius: var(--md-shape-corner-medium);
+}
+
+.borrow-options label {
+  display: block;
+  margin-bottom: 8px;
+  color: var(--md-on-surface-variant);
+}
+
+.days-selector {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+}
+
+.days-slider {
+  flex: 1;
+  height: 8px;
+  -webkit-appearance: none;
+  appearance: none;
+  background: var(--md-surface-container-highest);
+  border-radius: 4px;
+  outline: none;
+}
+
+.days-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  appearance: none;
+  width: 24px;
+  height: 24px;
+  background: var(--md-primary);
+  border-radius: 50%;
+  cursor: pointer;
+}
+
+.days-slider::-moz-range-thumb {
+  width: 24px;
+  height: 24px;
+  background: var(--md-primary);
+  border-radius: 50%;
+  cursor: pointer;
+  border: none;
+}
+
+.days-value {
+  font-size: 18px;
+  font-weight: 600;
+  color: var(--md-primary);
+  min-width: 60px;
+}
+
+.days-hint {
+  margin-top: 8px;
+  font-size: 12px;
+  color: var(--md-on-surface-variant);
+}
+
+/* ==================== 响应式补充 ==================== */
+
+@media (max-width: 600px) {
+  .location-info {
+    padding: 10px 12px;
+  }
+  
+  .location-icon {
+    font-size: 16px;
+  }
+  
+  .location-text {
+    font-size: 13px;
+  }
+  
+  .borrow-options {
+    padding: 12px;
+  }
+  
+  .borrow-options label {
+    font-size: 13px;
+  }
+  
+  .days-selector {
+    flex-direction: column;
+    align-items: stretch;
+    gap: 12px;
+  }
+  
+  .days-value {
+    text-align: center;
+    font-size: 20px;
+  }
+  
+  .days-hint {
+    text-align: center;
+  }
+  
+  .stock-info {
+    gap: 24px;
+    padding: 16px;
+  }
+  
+  .stock-item .value {
+    font-size: 20px;
   }
 }
 </style>

@@ -14,7 +14,7 @@ import os
 from database import get_db, get_password_hash, verify_password
 from auth import create_access_token, authenticate_user, change_user_password, get_current_user
 from models import LoginRequest, LoginResponse, ChangePasswordRequest, MessageResponse
-from routers import books, borrow, users, social, batch
+from routers import books, borrow, users, social, batch, admin, messages
 
 
 # ==================== 生命周期管理 ====================
@@ -44,9 +44,8 @@ app.add_middleware(
 
 # 获取当前绝对路径 (backend directory)
 backend_path = os.path.dirname(os.path.abspath(__file__))
-# Frontend is in ../frontend/dist
-base_path = os.path.dirname(backend_path)
-frontend_path = os.path.join(base_path, "frontend", "dist")
+# Vue 编译文件放在 backend/res 目录
+frontend_path = os.path.join(backend_path, "res")
 
 # ==================== 认证 API ====================
 
@@ -102,6 +101,8 @@ app.include_router(borrow.router)
 app.include_router(users.router)
 app.include_router(social.router)
 app.include_router(batch.router)
+app.include_router(admin.router)
+app.include_router(messages.router)
 
 # ==================== 封面图片服务 ====================
 

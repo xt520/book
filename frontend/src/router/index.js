@@ -36,6 +36,12 @@ const routes = [
         name: 'Admin',
         component: () => import('../views/AdminView.vue'),
         meta: { requiresAuth: true, requiresAdmin: true }
+    },
+    {
+        path: '/super-admin',
+        name: 'SuperAdmin',
+        component: () => import('../views/SuperAdminView.vue'),
+        meta: { requiresAuth: true, requiresSuperAdmin: true }
     }
 ]
 
@@ -55,14 +61,24 @@ router.beforeEach((to, from, next) => {
         return next('/login')
     }
 
-    // 需要管理员权限
-    if (to.meta.requiresAdmin && user?.role !== 'admin') {
+    // 需要超级管理员权限
+    if (to.meta.requiresSuperAdmin && user?.role !== 'super_admin') {
+        return next('/')
+    }
+
+    // 需要管理员权限（包括超级管理员）
+    if (to.meta.requiresAdmin && !['admin', 'super_admin'].includes(user?.role)) {
         return next('/')
     }
 
     // 已登录用户访问登录页
     if (to.meta.guest && token) {
-        return next(user?.role === 'admin' ? '/admin' : '/')
+        if (user?.role === 'super_admin') {
+            return next('/super-admin')
+        } else if (user?.role === 'admin') {
+            return next('/admin')
+        }
+        return next('/')
     }
 
     next()

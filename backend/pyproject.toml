@@ -5,7 +5,7 @@ name = "book-management-system"
 version = "1.1.0"
 description = "Library Management System with FastAPI and Vue"
 readme = "README.md"
-requires-python = ">=3.13"
+requires-python = ">=3.11,<3.14"
 dependencies = [
     "fastapi",
     "uvicorn",
@@ -15,7 +15,7 @@ dependencies = [
     "pandas",
     "openpyxl",
     "httpx",
-    "numpy>=2.1.0",  # Python 3.13 需要 NumPy 2.1+
+    "numpy",  # Will resolve to compatible version
     "PyJWT",
 ]
 
